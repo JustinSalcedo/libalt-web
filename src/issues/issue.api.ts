@@ -95,6 +95,24 @@ export class IssueApi extends RootApi {
         }
     }
 
+    async createManyIssues(issues: IIssue[]) {
+        try {
+            const response = await this.POST('/many', {
+                body: JSON.stringify(issues),
+            })
+
+            const {status} = response
+            const data = await response.json()
+
+            if (status !== 201) throw new Error(data.message || 'Unknown error')
+
+            return data as IssueDto[]
+        } catch (error) {
+            console.error(error)
+            return []
+        }
+    }
+
     async updateIssue(id: string, issue: Partial<IIssue>) {
         try {
             const response = await this.PUT(`/${id}`, {
