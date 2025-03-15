@@ -2,16 +2,16 @@ import {makeAutoObservable, runInAction} from 'mobx'
 import {Issue} from './issue'
 import {IssueApi} from './issue.api'
 import {IIssue} from '../types/IIssue'
+import {RootStore} from '../root.store'
 
 export class IssueStore {
     issues: Issue[] = []
-    issueInProgress: Issue | null = null
 
     api: IssueApi
 
     synced = false
 
-    constructor() {
+    constructor(private rootStore: RootStore) {
         makeAutoObservable(this)
         this.api = new IssueApi()
     }
@@ -30,6 +30,7 @@ export class IssueStore {
                             timeEntries: record.timeEntries,
                             archived: record.archived,
                             issueStore: this,
+                            rootStore: this.rootStore,
                         }),
                 )
                 this.synced = true
@@ -37,10 +38,6 @@ export class IssueStore {
         } catch (error) {
             console.log(error)
         }
-    }
-
-    setIssueInProgress(issue: Issue | null) {
-        this.issueInProgress = issue
     }
 
     async createIssue(issueDto: IIssue) {
@@ -54,6 +51,7 @@ export class IssueStore {
                 timeEntries: record.timeEntries,
                 archived: record.archived,
                 issueStore: this,
+                rootStore: this.rootStore,
             })
             runInAction(() => {
                 this.issues.push(issue)

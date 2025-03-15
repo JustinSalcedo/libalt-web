@@ -1,15 +1,15 @@
-import {computed, IReactionDisposer, makeAutoObservable, reaction} from 'mobx'
+import {computed, makeAutoObservable} from 'mobx'
 import {RootStore} from '../root.store'
 import {formatStopwatchTime} from '../utils/datetime'
+import {Issue} from '../issues/issue'
 
 export class StopwatchObservable {
-    timeInMs = 0
+    timeCountInMs = 0
     isRunning = false
-    intervalId: NodeJS.Timer | number = 0
+    timeCounterIntervalId: NodeJS.Timer | number = 0
+    calibrateCounterIntervalId: NodeJS.Timer | number = 0
     startTimeInMs = 0
-
-    isRunningReactionDisposer: IReactionDisposer | null = null
-    isIssuePlayedReactionDisposer: IReactionDisposer | null = null
+    issueInProgress: Issue | null = null
 
     constructor(private rootStore: RootStore) {
         makeAutoObservable(this, {
@@ -19,80 +19,83 @@ export class StopwatchObservable {
             formattedTime: computed,
             isIssueInProgress: computed,
         })
-        this.initReactions()
-    }
-
-    initReactions() {
-        this.isRunningReactionDisposer = reaction(
-            () => this.isRunning,
-            isRunning => {
-                if (isRunning) {
-                    this.startTimeInMs = Date.now()
-                    this.intervalId = setInterval(
-                        () => this.setTime(this.timeInMs + 10),
-                        10,
-                    )
-                    return
-                }
-                clearInterval(this.intervalId)
-                this.rootStore.issueStore.issueInProgress?.addTimeEntry({
-                    startTimeInMs: this.startTimeInMs,
-                    endTimeInMs: Date.now(),
-                })
-                this.startTimeInMs = 0
-            },
-        )
-        this.isIssuePlayedReactionDisposer = reaction(
-            () => this.rootStore.issueStore.issueInProgress,
-            issue => {
-                console.log('issue', issue)
-                if (issue) this.start()
-                // else this.stop()
-            },
-        )
     }
 
     get code() {
-        return this.rootStore.issueStore.issueInProgress?.code ?? '[NO-CODE]'
+        return this.issueInProgress?.code ?? '[NO-CODE]'
     }
 
     get name() {
-        return (
-            this.rootStore.issueStore.issueInProgress?.name ?? 'Untitled issue'
-        )
+        return this.issueInProgress?.name ?? 'Untitled issue'
     }
 
     get title() {
-        return this.rootStore.issueStore.issueInProgress
+        return this.issueInProgress
             ? `${this.code} ${this.name}`
             : 'Nothing in progress'
     }
 
     get formattedTime() {
-        return formatStopwatchTime(this.timeInMs)
+        return formatStopwatchTime(this.timeCountInMs)
     }
 
     get isIssueInProgress() {
-        return !!this.rootStore.issueStore.issueInProgress
+        return !!this.issueInProgress
     }
 
-    setTime(timeInMs: number) {
-        this.timeInMs = timeInMs
+    setTime(timeCountInMs: number) {
+        this.timeCountInMs = timeCountInMs
     }
 
-    start() {
+    runTimeCounter() {
         this.isRunning = true
-        console.log('starting at stopwatch')
+        this.startTimeInMs = Date.now()
+        this.timeCounterIntervalId = setInterval(
+            () => this.setTime(this.timeCountInMs + 10),
+            10,
+        )
+        this.calibrateCounterIntervalId = setInterval(
+            () =>
+                this.setTime(
+                    Date.now() -
+                        this.startTimeInMs +
+                        (this.issueInProgress?.totalTimeInMs ?? 0),
+                ),
+            5000,
+        )
+    }
+
+    stopTimeCounter() {
+        this.isRunning = false
+        clearInterval(this.timeCounterIntervalId)
+        clearInterval(this.calibrateCounterIntervalId)
+        if (!this.startTimeInMs) return
+        this.issueInProgress?.addTimeEntry({
+            startTimeInMs: this.startTimeInMs,
+            endTimeInMs: Date.now(),
+        })
+        this.startTimeInMs = 0
+    }
+
+    startIssue(issue: Issue) {
+        if (issue !== this.issueInProgress) this.stop()
+        if (this.isRunning) return
+        this.issueInProgress = issue
+        this.setTime(issue.totalTimeInMs)
+        this.play()
+    }
+
+    play() {
+        this.runTimeCounter()
     }
 
     pause() {
-        this.isRunning = false
+        this.stopTimeCounter()
     }
 
     stop() {
-        this.isRunning = false
+        this.stopTimeCounter()
         this.setTime(0)
-        // blur issue after reactions
-        setTimeout(() => this.rootStore.issueStore.setIssueInProgress(null))
+        this.issueInProgress = null
     }
 }

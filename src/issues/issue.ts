@@ -1,7 +1,8 @@
-import {makeAutoObservable, runInAction} from 'mobx'
+import {computed, makeAutoObservable, runInAction} from 'mobx'
 import {IIssue} from '../types/IIssue'
 import {ITimeEntry} from '../types/ITimeEntry'
 import {IssueStore} from './issue.store'
+import {RootStore} from '../root.store'
 
 interface IssueConstructorDto {
     id: string
@@ -11,6 +12,7 @@ interface IssueConstructorDto {
     archived: boolean
 
     issueStore: IssueStore
+    rootStore: RootStore
 }
 
 export class Issue implements IIssue {
@@ -21,6 +23,7 @@ export class Issue implements IIssue {
     archived: boolean = false
 
     issueStore: IssueStore
+    rootStore: RootStore
 
     constructor({
         id,
@@ -29,8 +32,12 @@ export class Issue implements IIssue {
         timeEntries,
         archived,
         issueStore,
+        rootStore,
     }: IssueConstructorDto) {
-        makeAutoObservable(this)
+        makeAutoObservable(this, {
+            isPlaying: computed,
+            totalTimeInMs: computed,
+        })
 
         this.id = id
         this.code = code
@@ -39,14 +46,32 @@ export class Issue implements IIssue {
         this.archived = archived
 
         this.issueStore = issueStore
+        this.rootStore = rootStore
     }
 
     get api() {
         return this.issueStore.api
     }
 
+    get isPlaying() {
+        return (
+            this.rootStore.stopwatchObservable.issueInProgress === this &&
+            this.rootStore.stopwatchObservable.isRunning
+        )
+    }
+
+    get totalTimeInMs() {
+        return this.timeEntries.reduce((acc, timeEntry) => {
+            return acc + (timeEntry.endTimeInMs - timeEntry.startTimeInMs)
+        }, 0)
+    }
+
     play() {
-        this.issueStore.setIssueInProgress(this)
+        this.rootStore.stopwatchObservable.startIssue(this)
+    }
+
+    stop() {
+        if (this.isPlaying) this.rootStore.stopwatchObservable.stop()
     }
 
     async addTimeEntry(timeEntry: ITimeEntry) {

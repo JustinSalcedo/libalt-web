@@ -3,9 +3,10 @@ import IssueLookupModal from '../modals/IssueLookup.modal'
 import styled from 'styled-components'
 import {Issue} from '../issues/issue'
 import DarkButton from './DarkButton'
+import {observer} from 'mobx-react-lite'
 
 // IssueItem component with code, name, play button, and view button for IssueList
-const IssueItem = ({issue}: {issue: Issue}) => {
+const IssueItem = observer(({issue}: {issue: Issue}) => {
     const [showLookupModal, setShowLookupModal] = useState(false)
 
     return (
@@ -15,7 +16,13 @@ const IssueItem = ({issue}: {issue: Issue}) => {
                 <DarkButton onClick={() => setShowLookupModal(true)}>
                     View
                 </DarkButton>
-                <DarkButton onClick={() => issue.play()}>Play</DarkButton>
+                {issue.isPlaying ? (
+                    <DarkButton onClick={() => issue.stop()} type="danger">
+                        Stop
+                    </DarkButton>
+                ) : (
+                    <DarkButton onClick={() => issue.play()}>Play</DarkButton>
+                )}
             </ButtonsContainer>
             {showLookupModal && (
                 <IssueLookupModal
@@ -25,7 +32,7 @@ const IssueItem = ({issue}: {issue: Issue}) => {
             )}
         </Container>
     )
-}
+})
 
 export default IssueItem
 

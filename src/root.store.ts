@@ -11,7 +11,7 @@ export class RootStore {
     constructor() {
         makeAutoObservable(this, {init: false})
 
-        this.issueStore = new IssueStore()
+        this.issueStore = new IssueStore(this)
         this.stopwatchObservable = new StopwatchObservable(this)
         this.issueListObservable = new IssueListObservable(this.issueStore)
         this.init()

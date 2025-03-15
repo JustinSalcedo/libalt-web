@@ -14,20 +14,22 @@ const Stopwatch = observer(() => {
                 {stopwatchObservable.formattedTime}
             </StyledTimerText>
             <ButtonsContainer>
+                {!stopwatchObservable.isIssueInProgress ||
+                !stopwatchObservable.isRunning ? (
+                    <DarkButton
+                        onClick={() => stopwatchObservable.play()}
+                        disabled={!stopwatchObservable.isIssueInProgress}>
+                        Play
+                    </DarkButton>
+                ) : (
+                    <DarkButton onClick={() => stopwatchObservable.pause()}>
+                        Pause
+                    </DarkButton>
+                )}
                 <DarkButton
-                    onClick={() => stopwatchObservable.start()}
-                    disabled={
-                        !stopwatchObservable.isIssueInProgress ||
-                        stopwatchObservable.isRunning
-                    }>
-                    Play
-                </DarkButton>
-                <DarkButton
-                    onClick={() => stopwatchObservable.pause()}
-                    disabled={!stopwatchObservable.isRunning}>
-                    Pause
-                </DarkButton>
-                <DarkButton onClick={() => stopwatchObservable.stop()}>
+                    onClick={() => stopwatchObservable.stop()}
+                    disabled={!stopwatchObservable.isIssueInProgress}
+                    type="danger">
                     Stop
                 </DarkButton>
             </ButtonsContainer>
@@ -54,4 +56,5 @@ const StyledTimerText = styled.p`
     font-size: 2rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    font-family: monospace;
 `

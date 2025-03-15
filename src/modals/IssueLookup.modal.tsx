@@ -11,17 +11,13 @@ const IssueLookupModal = ({
     issue: Issue
     onClose: () => void
 }) => {
-    const totalLoggedTime = issue.timeEntries.reduce((acc, timeEntry) => {
-        return acc + (timeEntry.endTimeInMs - timeEntry.startTimeInMs)
-    }, 0)
-
     return (
         <Container>
             <CloseButton onClick={onClose}>X</CloseButton>
-            <h2>{`${issue.code} ${issue.name}`}</h2>
+            <Heading>{`${issue.code} ${issue.name}`}</Heading>
             <p>
                 Total Logged Time:{' '}
-                {formatTimeWithoutMilliseconds(totalLoggedTime)}
+                {formatTimeWithoutMilliseconds(issue.totalTimeInMs)}
             </p>
             <StyledList>
                 {issue.timeEntries.map((timeEntry, index) => (
@@ -73,17 +69,22 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
     height: 100vh;
-    width: 100vw;
+    width: calc(100vw - 40px);
     position: absolute;
     top: 0;
     left: 0;
     background-color: #111;
+    padding-inline: 20px;
 `
 
 const CloseButton = styled.button`
     position: absolute;
     top: 10px;
     right: 10px;
+`
+
+const Heading = styled.h2`
+    text-align: center;
 `
 
 const ButtonsContainer = styled.div`
@@ -94,13 +95,7 @@ const ButtonsContainer = styled.div`
 `
 
 const StyledList = styled.ol`
-    padding: 0;
     margin: 0;
-    padding-left: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    justify-content: center;
     gap: 0.5rem;
     max-height: 50vh;
     overflow-y: scroll;
