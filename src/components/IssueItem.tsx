@@ -15,7 +15,6 @@ const IssueItem = observer(
 
         return (
             <Container>
-                {issue.priority}
                 {small ? (
                     <StyledIssueTitleSmall>{`${issue.code} ${issue.name}`}</StyledIssueTitleSmall>
                 ) : (
