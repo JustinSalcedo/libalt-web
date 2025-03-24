@@ -5,4 +5,5 @@ export interface IIssue {
     name: string
     timeEntries: ITimeEntry[]
     archived: boolean
+    priority: number
 }

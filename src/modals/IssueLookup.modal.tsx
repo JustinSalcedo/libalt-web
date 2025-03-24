@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import {Issue} from '../issues/issue'
 import {formatTimeWithoutMilliseconds} from '../utils/datetime'
-import DarkButton from '../components/DarkButton'
+import DarkButton from '../components/buttons/DarkButton'
 
 // IssueLookupModal with issue code, name, total logged tiem, and time entries
 const IssueLookupModal = ({
@@ -20,27 +20,10 @@ const IssueLookupModal = ({
                 {formatTimeWithoutMilliseconds(issue.totalTimeInMs)}
             </p>
             <StyledList>
-                {issue.timeEntries.map((timeEntry, index) => (
+                {issue.timeLogStrList.map(({timeRange, duration}, index) => (
                     <li key={index}>
-                        {/* start time and end time from startTimeInMs and endTimeInMs */}
-                        <p>
-                            {new Date(
-                                timeEntry.startTimeInMs,
-                            ).toLocaleTimeString()}{' '}
-                            -{' '}
-                            {new Date(
-                                timeEntry.endTimeInMs,
-                            ).toLocaleTimeString()}
-                        </p>
-                        {/* calculate total duration with startTimeInMs and endTimeInMs in HH:MM format*/}
-                        <p>
-                            {formatTimeWithoutMilliseconds(
-                                Math.floor(
-                                    timeEntry.endTimeInMs -
-                                        timeEntry.startTimeInMs,
-                                ),
-                            )}
-                        </p>
+                        <p>{timeRange}</p>
+                        <p>{duration}</p>
                     </li>
                 ))}
             </StyledList>

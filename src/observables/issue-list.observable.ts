@@ -8,11 +8,12 @@ export class IssueListObservable {
             archivedIssues: computed,
         })
     }
+
     get activeIssues() {
-        return this.issueStore.issues.filter(issue => !issue.archived)
+        return this.issueStore.activeIssues
     }
 
     get archivedIssues() {
-        return this.issueStore.issues.filter(issue => issue.archived)
+        return this.issueStore.archivedIssues
     }
 }

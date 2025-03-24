@@ -2,37 +2,46 @@ import {useState} from 'react'
 import IssueLookupModal from '../modals/IssueLookup.modal'
 import styled from 'styled-components'
 import {Issue} from '../issues/issue'
-import DarkButton from './DarkButton'
 import {observer} from 'mobx-react-lite'
+import ViewButton from './buttons/ViewButton'
+import StopButton from './buttons/StopButton'
+import PlayButton from './buttons/PlayButton'
+import MoveUpButton from './buttons/MoveUpButton'
 
 // IssueItem component with code, name, play button, and view button for IssueList
-const IssueItem = observer(({issue}: {issue: Issue}) => {
-    const [showLookupModal, setShowLookupModal] = useState(false)
+const IssueItem = observer(
+    ({issue, small = false}: {issue: Issue; small?: boolean}) => {
+        const [showLookupModal, setShowLookupModal] = useState(false)
 
-    return (
-        <Container>
-            <StyledIssueTitle>{`${issue.code} ${issue.name}`}</StyledIssueTitle>
-            <ButtonsContainer>
-                <DarkButton onClick={() => setShowLookupModal(true)}>
-                    View
-                </DarkButton>
-                {issue.isPlaying ? (
-                    <DarkButton onClick={() => issue.stop()} type="danger">
-                        Stop
-                    </DarkButton>
+        return (
+            <Container>
+                {issue.priority}
+                {small ? (
+                    <StyledIssueTitleSmall>{`${issue.code} ${issue.name}`}</StyledIssueTitleSmall>
                 ) : (
-                    <DarkButton onClick={() => issue.play()}>Play</DarkButton>
+                    <StyledIssueTitle>{`${issue.code} ${issue.name}`}</StyledIssueTitle>
                 )}
-            </ButtonsContainer>
-            {showLookupModal && (
-                <IssueLookupModal
-                    issue={issue}
-                    onClose={() => setShowLookupModal(false)}
-                />
-            )}
-        </Container>
-    )
-})
+                <ButtonsContainer>
+                    {!issue.archived && !!issue.priority && (
+                        <MoveUpButton onClick={() => issue.moveUp()} />
+                    )}
+                    <ViewButton onClick={() => setShowLookupModal(true)} />
+                    {issue.isPlaying ? (
+                        <StopButton onClick={() => issue.stop()} />
+                    ) : (
+                        <PlayButton onClick={() => issue.play()} />
+                    )}
+                </ButtonsContainer>
+                {showLookupModal && (
+                    <IssueLookupModal
+                        issue={issue}
+                        onClose={() => setShowLookupModal(false)}
+                    />
+                )}
+            </Container>
+        )
+    },
+)
 
 export default IssueItem
 
@@ -54,10 +63,17 @@ const StyledIssueTitle = styled.h2`
     text-overflow: ellipsis;
 `
 
+const StyledIssueTitleSmall = styled.h2`
+    font-size: 1rem;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+`
+
 const ButtonsContainer = styled.div`
     display: flex;
     height: 2rem;
-    /* width: max-content; */
     gap: 0.5rem;
     margin-left: 0.5rem;
 `

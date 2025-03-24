@@ -3,6 +3,7 @@ import {IIssue} from '../types/IIssue'
 import {ITimeEntry} from '../types/ITimeEntry'
 import {IssueDto} from './dto/issue.dto'
 import {TimeEntryDto} from './dto/time-entry.dto'
+import {UpdateIssueDto} from './dto/update-issue.dto'
 
 export class IssueApi extends RootApi {
     constructor() {
@@ -128,6 +129,24 @@ export class IssueApi extends RootApi {
         } catch (error) {
             console.error(error)
             return null
+        }
+    }
+
+    async updateManyIssues(issues: UpdateIssueDto[]) {
+        try {
+            const response = await this.PUT('/', {
+                body: JSON.stringify(issues),
+            })
+
+            const {status} = response
+            const data = await response.json()
+
+            if (status !== 200) throw new Error(data.message || 'Unknown error')
+
+            return data as IssueDto[]
+        } catch (error) {
+            console.error(error)
+            return []
         }
     }
 

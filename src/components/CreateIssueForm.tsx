@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 import {IIssue} from '../types/IIssue'
-import DarkButton from './DarkButton'
+import DarkButton from './buttons/DarkButton'
 
 // CreateIssueForm component with fields for issue code and name and save button
 const CreateIssueForm = ({

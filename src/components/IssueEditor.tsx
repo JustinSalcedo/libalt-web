@@ -1,14 +1,16 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {IIssue} from '../types/IIssue'
 import CreateIssueForm from './CreateIssueForm'
 import useIssueStore from '../hooks/useIssueStore'
 import {observer} from 'mobx-react-lite'
 import styled from 'styled-components'
-import DarkButton from './DarkButton'
+import DarkButton from './buttons/DarkButton'
+import useIssueListObservable from '../hooks/useIssueListObservable'
 
 // IssueEditor component to toggle CreateIssueForm with add and cancel button
 const IssueEditor = observer(() => {
     const issueStore = useIssueStore()
+    const issueListObservable = useIssueListObservable()
 
     const [isEditing, setIsEditing] = useState(false)
     // issue local state
@@ -17,7 +19,15 @@ const IssueEditor = observer(() => {
         name: '',
         timeEntries: [],
         archived: false,
+        priority: 0,
     })
+
+    useEffect(() => {
+        setIssue(issue => ({
+            ...issue,
+            priority: issueListObservable.activeIssues.length,
+        }))
+    }, [issueListObservable.activeIssues.length])
 
     const onChange = (issue: IIssue) => {
         setIssue(issue)
@@ -32,6 +42,7 @@ const IssueEditor = observer(() => {
             name: '',
             timeEntries: [],
             archived: false,
+            priority: 0,
         })
     }
 

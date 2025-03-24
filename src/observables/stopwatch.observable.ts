@@ -3,6 +3,8 @@ import {RootStore} from '../root.store'
 import {formatStopwatchTime} from '../utils/datetime'
 import {Issue} from '../issues/issue'
 
+const TICK_INTERVAL_MS = 13
+
 export class StopwatchObservable {
     timeCountInMs = 0
     isRunning = false
@@ -51,8 +53,8 @@ export class StopwatchObservable {
         this.isRunning = true
         this.startTimeInMs = Date.now()
         this.timeCounterIntervalId = setInterval(
-            () => this.setTime(this.timeCountInMs + 10),
-            10,
+            () => this.setTime(this.timeCountInMs + TICK_INTERVAL_MS),
+            TICK_INTERVAL_MS,
         )
         this.calibrateCounterIntervalId = setInterval(
             () =>

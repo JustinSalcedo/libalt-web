@@ -1,8 +1,15 @@
-import {computed, makeAutoObservable, runInAction} from 'mobx'
+import {
+    computed,
+    IReactionDisposer,
+    makeAutoObservable,
+    reaction,
+    runInAction,
+} from 'mobx'
 import {IIssue} from '../types/IIssue'
 import {ITimeEntry} from '../types/ITimeEntry'
 import {IssueStore} from './issue.store'
 import {RootStore} from '../root.store'
+import {formatTimeWithoutMilliseconds} from '../utils/datetime'
 
 interface IssueConstructorDto {
     id: string
@@ -10,9 +17,15 @@ interface IssueConstructorDto {
     name: string
     timeEntries: ITimeEntry[]
     archived: boolean
+    priority?: number
 
     issueStore: IssueStore
     rootStore: RootStore
+}
+
+interface TimeLogListItem {
+    timeRange: string
+    duration: string
 }
 
 export class Issue implements IIssue {
@@ -21,9 +34,12 @@ export class Issue implements IIssue {
     name: string
     timeEntries: ITimeEntry[] = []
     archived: boolean = false
+    priority: number = 0
 
     issueStore: IssueStore
     rootStore: RootStore
+
+    updateIssueReactionDisposer: IReactionDisposer | null = null
 
     constructor({
         id,
@@ -31,12 +47,15 @@ export class Issue implements IIssue {
         name,
         timeEntries,
         archived,
+        priority,
         issueStore,
         rootStore,
     }: IssueConstructorDto) {
         makeAutoObservable(this, {
             isPlaying: computed,
             totalTimeInMs: computed,
+            timeLogStrList: computed,
+            updateIssueReactionDisposer: false,
         })
 
         this.id = id
@@ -44,9 +63,12 @@ export class Issue implements IIssue {
         this.name = name
         this.timeEntries = timeEntries
         this.archived = archived
+        this.priority = priority ?? 0
 
         this.issueStore = issueStore
         this.rootStore = rootStore
+
+        this.initReactions()
     }
 
     get api() {
@@ -66,12 +88,73 @@ export class Issue implements IIssue {
         }, 0)
     }
 
+    get timeLogStrList(): TimeLogListItem[] {
+        // today at midnight
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        return this.timeEntries.map(({startTimeInMs, endTimeInMs}) => {
+            return {
+                timeRange:
+                    startTimeInMs >= today.getTime()
+                        ? `${new Date(
+                              startTimeInMs,
+                          ).toLocaleTimeString()} - ${new Date(
+                              endTimeInMs,
+                          ).toLocaleTimeString()}`
+                        : `${new Date(
+                              startTimeInMs,
+                          ).toLocaleString()} - ${new Date(
+                              endTimeInMs,
+                          ).toLocaleString()}`,
+                duration: formatTimeWithoutMilliseconds(
+                    Math.floor(endTimeInMs - startTimeInMs),
+                ),
+            }
+        })
+    }
+
+    getIssueAbove(): Issue | undefined {
+        const issueIndex = this.issueStore.activeIssues.findIndex(
+            issue => issue.id === this.id,
+        )
+        if (issueIndex === -1) return undefined
+        if (issueIndex === 0) return undefined
+        return this.issueStore.activeIssues[issueIndex - 1]
+    }
+
+    initReactions() {
+        this.updateIssueReactionDisposer = reaction(
+            () => ({archived: this.archived, priority: this.priority}),
+            ({archived, priority}) =>
+                this.api
+                    .updateIssue(this.id, {archived, priority})
+                    .then(updated => console.log('updated:', updated))
+                    .catch(error => console.error(error)),
+        )
+    }
+
     play() {
         this.rootStore.stopwatchObservable.startIssue(this)
     }
 
     stop() {
         if (this.isPlaying) this.rootStore.stopwatchObservable.stop()
+    }
+
+    moveUp() {
+        const issueAbove = this.getIssueAbove()
+        if (!issueAbove) return
+        const issueIndex = this.issueStore.activeIssues.findIndex(
+            issue => issue.id === this.id,
+        )
+        if (issueIndex === -1) return
+
+        issueAbove.setPriority(this.priority)
+        this.setPriority(this.priority - 1)
+    }
+
+    setPriority(priority: number) {
+        this.priority = priority
     }
 
     async addTimeEntry(timeEntry: ITimeEntry) {
@@ -105,32 +188,14 @@ export class Issue implements IIssue {
         }
     }
 
-    async archive() {
-        try {
-            const archived = await this.api.updateIssue(this.id, {
-                archived: true,
-            })
-            if (!archived) throw new Error('Failed to archive issue')
-            runInAction(() => {
-                this.archived = true
-            })
-        } catch (error) {
-            console.error(error)
-        }
+    archive() {
+        this.archived = true
+        this.issueStore.resortIssuesByPriority()
     }
 
-    async unarchive() {
-        try {
-            const unarchived = await this.api.updateIssue(this.id, {
-                archived: false,
-            })
-            if (!unarchived) throw new Error('Failed to unarchive issue')
-            runInAction(() => {
-                this.archived = false
-            })
-        } catch (error) {
-            console.error(error)
-        }
+    unarchive() {
+        this.archived = false
+        this.priority = this.issueStore.activeIssues.length
     }
 
     async delete() {

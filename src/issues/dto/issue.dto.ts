@@ -6,4 +6,5 @@ export interface IssueDto {
     name: string
     timeEntries: TimeEntryDto[]
     archived: boolean
+    priority?: number
 }

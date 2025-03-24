@@ -102,7 +102,6 @@ export class RootApi {
             ...reqInit,
             method,
         }
-        console.log('initObj', initObj)
         return await fetch(`${this.baseURL}${endpoint}`, initObj)
     }
 
