@@ -6,11 +6,13 @@ import {observer} from 'mobx-react-lite'
 import styled from 'styled-components'
 import DarkButton from './buttons/DarkButton'
 import useIssueListObservable from '../hooks/useIssueListObservable'
+import useViewsObservable from '../hooks/useViewsObservable'
 
 // IssueEditor component to toggle CreateIssueForm with add and cancel button
 const IssueEditor = observer(() => {
     const issueStore = useIssueStore()
     const issueListObservable = useIssueListObservable()
+    const viewsObservable = useViewsObservable()
 
     const [isEditing, setIsEditing] = useState(false)
     // issue local state
@@ -50,6 +52,14 @@ const IssueEditor = observer(() => {
         setIsEditing(false)
     }
 
+    const toggleMidPanelView = () => {
+        viewsObservable.setMidPanelView(
+            viewsObservable.midPanel === 'daily-log'
+                ? 'issue-list'
+                : 'daily-log',
+        )
+    }
+
     return (
         <Container>
             {isEditing ? (
@@ -64,6 +74,12 @@ const IssueEditor = observer(() => {
                     Add Issue
                 </DarkButton>
             )}
+            <DarkButton onClick={() => toggleMidPanelView()}>
+                See{' '}
+                {viewsObservable.midPanel === 'daily-log'
+                    ? 'Issues'
+                    : 'Daily Log'}
+            </DarkButton>
         </Container>
     )
 })
@@ -71,5 +87,8 @@ const IssueEditor = observer(() => {
 export default IssueEditor
 
 const Container = styled.div`
+    display: flex;
+    /* justify-content: space-between; */
+    gap: 1rem;
     margin-bottom: 1rem;
 `

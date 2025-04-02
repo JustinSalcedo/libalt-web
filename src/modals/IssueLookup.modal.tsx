@@ -52,18 +52,18 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
     height: 100vh;
-    width: calc(100vw - 40px);
+    width: 100vw;
     position: absolute;
     top: 0;
     left: 0;
     background-color: #111;
-    padding-inline: 20px;
+    padding-inline: 1rem;
 `
 
 const CloseButton = styled.button`
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 2rem;
+    right: 2rem;
 `
 
 const Heading = styled.h2`

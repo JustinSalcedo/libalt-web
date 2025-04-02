@@ -1,13 +1,14 @@
 import {observer} from 'mobx-react-lite'
 import IssueItem from './IssueItem'
 import useIssueListObservable from '../hooks/useIssueListObservable'
+import styled from 'styled-components'
 
 // IssueList component
 const IssueList = observer(() => {
     const issueListObservable = useIssueListObservable()
 
     return (
-        <div className="issue-list">
+        <IssueListContainer>
             {issueListObservable.activeIssues.map(issue => (
                 <IssueItem
                     key={issue.id}
@@ -24,8 +25,12 @@ const IssueList = observer(() => {
                     ))}
                 </details>
             )}
-        </div>
+        </IssueListContainer>
     )
 })
 
 export default IssueList
+
+const IssueListContainer = styled.div`
+    overflow-y: scroll;
+`

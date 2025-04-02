@@ -2,6 +2,9 @@ import Stopwatch from '../components/Stopwatch'
 import IssueList from '../components/IssueList'
 import styled from 'styled-components'
 import IssueEditor from '../components/IssueEditor'
+import DailyLogList from '../components/DailyLogList'
+import {observer} from 'mobx-react-lite'
+import useViewsObservable from '../hooks/useViewsObservable'
 
 // WatcherScreen component
 const WatcherScreen = () => {
@@ -11,9 +14,7 @@ const WatcherScreen = () => {
                 <Stopwatch />
             </StopwatchContainer>
             <IssueEditor />
-            <IssueListContainer>
-                <IssueList />
-            </IssueListContainer>
+            <MidPanel />
         </Container>
     )
 }
@@ -26,6 +27,7 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
     height: 100vh;
+    padding-block: 1.5rem;
 `
 
 const StopwatchContainer = styled.div`
@@ -33,6 +35,14 @@ const StopwatchContainer = styled.div`
     margin-bottom: 20px;
 `
 
-const IssueListContainer = styled.div`
-    overflow-y: scroll;
-`
+const MidPanel = observer(() => {
+    const viewsObservable = useViewsObservable()
+
+    switch (viewsObservable.midPanel) {
+        case 'daily-log':
+            return <DailyLogList />
+        case 'issue-list':
+        default:
+            return <IssueList />
+    }
+})

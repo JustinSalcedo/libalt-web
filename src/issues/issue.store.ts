@@ -47,7 +47,6 @@ export class IssueStore {
             activeRecords = activeRecords.sort(
                 (a, b) => (a.priority ?? 0) - (b.priority ?? 0),
             )
-            console.log('activeRecords:', activeRecords)
             activeRecords.forEach((record, index) => {
                 record.priority = index
             })
